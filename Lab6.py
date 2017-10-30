@@ -122,21 +122,24 @@ GPIO.setup(chan_list,GPIO.OUT)
 GPIO.setup(DataOut,GPIO.IN,GPIO.PUD_UP)
 
 # creates objects "p1" and "p2", sets ena and enb to 50 Hz
-p1 = GPIO.PWM(ENA,50)
-p2 = GPIO.PWM(ENB,50)
+p1 = GPIO.PWM(ENA,500)
+p2 = GPIO.PWM(ENB,500)
 
 maximum = 35
 oldKp = 0
 Kp = 0
 Ki = 0
 Kd = 0
+p1.start(maximum)
+p2.start(maximum)
+moveForward()
 
 # Launch.
 # Loops through until the track is completed.
 while True:
     
 # Stops the robot and sleeps for some time, in order to read from the sensors easier
-    time.sleep(.1)
+    #time.sleep(.1)
 
 # Read values from sensors, store into s1 - s5
     gvalue = readAnalog()
@@ -152,43 +155,75 @@ while True:
         print(gvalue[i-1])
     print("\n")
     
-    # left2 pos = 2180
-    # left pos = 2025
-    # middle pos = 1975
-    # right pos = 1770
-    # right2 pos = 1625
-    pos = (0*s1 + 1000*s2 + 2000*s3 + 3000*s4 + 4000*s5) / (s1 + s2 + s3 + s4 + s5)
+    if(s1 > 400):
+        s1 = 1000
+    else:
+        s1 = 0
+
+    if(s2 > 400):
+        s2 = 1000
+    else:
+        s2 = 0
+
+    if(s3 > 400):
+        s3 = 1000
+    else:
+        s3 = 0
+
+    if(s4 > 400):
+        s4 = 1000
+    else:
+        s4 = 0
+
+    if(s5 > 400):
+        s5 = 1000
+    else:
+        s5 = 0
+
+
+    # left2 pos = 2500
+    # left pos = 2250
+    # middle pos = 2000
+    # right pos = 1750
+    # right2 pos = 1500
     
+    if(s1 or s2 or s3 or s4 or s5):
+        pos = (0*s1 + 1000*s2 + 2000*s3 + 3000*s4 + 4000*s5) / (s1 + s2 + s3 + s4 + s5)
     print("Position: ", pos, "\n")
     
     # value of Kp
-    Kp = pos - 1975
-    
+    Kp = pos - 2000
+    print("Kp: ", Kp, "\n")
     # value of Ki
     Ki = Ki + Kp
-    
+    print("Ki: ", Ki, "\n")
     # value of Kd
     Kd = Kp - oldKp
+    print("Kd: ", Kd, "\n")
     
     oldKp = Kp
     
     diffa = Kp/25
+    #print("diffa: ", diffa, "\n")    
     diffb = Kp/25 + Kd/100
+    print("diffb: ", diffb, "\n")    
     diffc = Kp/25 + Kd/100 + Ki/1000
+    #print("diffc: ", diffc, "\n")
+    print("maximum: ", maximum, "\n\n")
     
     # diffa for P Controller
     # diffb for PD Controller
     # diffc for PID Controller
-    if(diffa > maximum):
-        diffa = maximum
-    if(diffa < - maximum):
-        diffa = - maximum
-    if(diffa < 0):
-        p1.ChangeDutyCycle(maximum + diffa)
+    if(diffb > maximum):
+        diffb = maximum
+    if(diffb < - maximum):
+        diffb = - maximum
+    if(diffb < 0):
+        p1.ChangeDutyCycle(maximum + diffb)
         p2.ChangeDutyCycle(maximum)
     else:
         p1.ChangeDutyCycle(maximum)
-        p2.ChangeDutyCycle(maximum - diffa)
+        p2.ChangeDutyCycle(maximum - diffb)
 
 # Stops both the PWM outputs
 p1.stop()
