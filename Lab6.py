@@ -130,6 +130,7 @@ oldKp = 0
 Kp = 0
 Ki = 0
 Kd = 0
+pos = 2000
 p1.start(maximum)
 p2.start(maximum)
 moveForward()
