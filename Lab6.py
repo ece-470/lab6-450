@@ -119,11 +119,13 @@ GPIO.setup(DataOut,GPIO.IN,GPIO.PUD_UP)
 p1 = GPIO.PWM(ENA,500)
 p2 = GPIO.PWM(ENB,500)
 
+# coefficients to control the power difference
+Kp = .25
+Ki = .0001
+Kd = .001
+# inital values to start with
 maximum = 35
-oldKp = 0
-Kp = 0
-Ki = 0
-Kd = 0
+oldProportional = 0
 pos = 2000
 p1.start(maximum)
 p2.start(maximum)
@@ -187,23 +189,23 @@ while True:
     print("Position: ", pos, "\n")
     
     # This process calculates the gain, integral and deriviate for the PID controller
-    # value of Kp
-    Kp = pos - 2000
-    print("Kp: ", Kp, "\n")
-    # value of Ki
-    Ki = Ki + Kp
-    print("Ki: ", Ki, "\n")
-    # value of Kd
-    Kd = Kp - oldKp
-    print("Kd: ", Kd, "\n")
+    # value for P part of controller
+    proportional = pos - 2000
+    print("Proportional: ", proportional, "\n")
+    # value for I part of controller
+    integral += proportional
+    print("Integral: ", integral, "\n")
+    # value for D part of controller
+    derivative = proportional - oldProportional
+    print("Derivative: ", derivative, "\n")
     
-    oldKp = Kp
+    oldProportional = proportional
     
-    diffa = Kp/25 # maybe try Kp/40
+    diffa = Kp*proportional
     #print("diffa: ", diffa, "\n")    
-    diffb = Kp/25 + Kd/100 # maybe try Kp/40
+    diffb = Kp*proportional + Kd*derivative
     print("diffb: ", diffb, "\n")    
-    diffc = Kp/25 + Kd/100 + Ki/1000 # maybe try Kp/40
+    diffc = Kp*proportional + Kd*derivative + Ki*integral
     #print("diffc: ", diffc, "\n")
     print("maximum: ", maximum, "\n\n")
     
