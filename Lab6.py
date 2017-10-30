@@ -15,7 +15,6 @@ DataOut = 23
 Address = 24
 Clock = 25
 
-
 numSensors = 5
 gvalue = [0,0,0,0,0,0] #array to hold values of the rake sensor
 
@@ -41,7 +40,6 @@ def moveForward():
     GPIO.output(IN2,GPIO.HIGH)
     GPIO.output(IN3,GPIO.HIGH)
     GPIO.output(IN4,GPIO.LOW)
-
 
 def pivotRight():
     # print("Left Pivot...")
@@ -71,9 +69,6 @@ def turnLeft():
     GPIO.output(IN2,GPIO.HIGH)
     GPIO.output(IN3,GPIO.LOW)
     GPIO.output(IN4,GPIO.LOW)
-
-
-
 
 # Reads in the values from the sensors, returns the values
 def readAnalog():
@@ -108,7 +103,6 @@ def readAnalog():
 
     return value[1:]
 
-
 # Sets the desired pin numbering system to BCM
 GPIO.setmode(GPIO.BCM)
 
@@ -121,7 +115,7 @@ chan_list = [ENA,ENB,IN1,IN2,IN3,IN4,Address,CS,Clock]
 GPIO.setup(chan_list,GPIO.OUT)
 GPIO.setup(DataOut,GPIO.IN,GPIO.PUD_UP)
 
-# creates objects "p1" and "p2", sets ena and enb to 50 Hz
+# creates objects "p1" and "p2", sets ena and enb to 500 Hz
 p1 = GPIO.PWM(ENA,500)
 p2 = GPIO.PWM(ENB,500)
 
@@ -181,17 +175,18 @@ while True:
     else:
         s5 = 0
 
-
+    # if all sensors are zero then we don't want to allow a division by 0
+    # most likely it's not near a black line and has wondered away.
     # left2 pos = 2500
     # left pos = 2250
     # middle pos = 2000
     # right pos = 1750
     # right2 pos = 1500
-    
     if(s1 or s2 or s3 or s4 or s5):
         pos = (0*s1 + 1000*s2 + 2000*s3 + 3000*s4 + 4000*s5) / (s1 + s2 + s3 + s4 + s5)
     print("Position: ", pos, "\n")
     
+    # This process calculates the gain, integral and deriviate for the PID controller
     # value of Kp
     Kp = pos - 2000
     print("Kp: ", Kp, "\n")
@@ -204,11 +199,11 @@ while True:
     
     oldKp = Kp
     
-    diffa = Kp/25
+    diffa = Kp/25 # maybe try Kp/40
     #print("diffa: ", diffa, "\n")    
-    diffb = Kp/25 + Kd/100
+    diffb = Kp/25 + Kd/100 # maybe try Kp/40
     print("diffb: ", diffb, "\n")    
-    diffc = Kp/25 + Kd/100 + Ki/1000
+    diffc = Kp/25 + Kd/100 + Ki/1000 # maybe try Kp/40
     #print("diffc: ", diffc, "\n")
     print("maximum: ", maximum, "\n\n")
     
@@ -225,10 +220,3 @@ while True:
     else:
         p1.ChangeDutyCycle(maximum)
         p2.ChangeDutyCycle(maximum - diffb)
-
-# Stops both the PWM outputs
-p1.stop()
-p2.stop()
-
-# Cleans up the used resources
-GPIO.cleanup()
